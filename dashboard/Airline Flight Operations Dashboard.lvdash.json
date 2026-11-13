@@ -1,0 +1,2162 @@
+{
+  "datasets": [
+    {
+      "name": "data_quality_issues",
+      "displayName": "Data Quality Issues",
+      "config": {
+        "source": "SELECT 'Rejected Records' AS issue_type, rejected_rows AS issue_count FROM aviation_catalog.flights.gold_data_quality UNION ALL SELECT 'Duplicate Records' AS issue_type, duplicate_rows AS issue_count FROM aviation_catalog.flights.gold_data_quality\n",
+        "measures": [
+          {
+            "name": "issue_count",
+            "expr": "SUM(issue_count)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Data quality issue counts found in bronze rows (rejected + duplicates)",
+        "dimensions": [
+          {
+            "name": "issue_type",
+            "expr": "issue_type"
+          }
+        ]
+      }
+    },
+    {
+      "name": "airline_summary",
+      "displayName": "Airline Summary",
+      "config": {
+        "source": "aviation_catalog.flights.gold_airline_summary",
+        "measures": [
+          {
+            "name": "total_flights",
+            "expr": "SUM(total_flights)"
+          },
+          {
+            "name": "total_passengers",
+            "expr": "SUM(total_passengers)"
+          },
+          {
+            "name": "total_revenue",
+            "expr": "SUM(total_revenue)"
+          },
+          {
+            "name": "average_delay",
+            "expr": "AVG(average_delay)"
+          },
+          {
+            "name": "on_time_flights",
+            "expr": "SUM(on_time_flights)"
+          },
+          {
+            "name": "on_time_percentage",
+            "expr": "SUM(on_time_flights) * 100.0 / SUM(total_flights)"
+          },
+          {
+            "name": "load_factor_percentage",
+            "expr": "AVG(load_factor_percentage)"
+          },
+          {
+            "name": "delayed_flights",
+            "expr": "SUM(total_flights) - SUM(on_time_flights)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Airline-level KPIs from the gold layer — flights, passengers, revenue, delays, on-time performance",
+        "dimensions": [
+          {
+            "name": "airline",
+            "expr": "airline"
+          }
+        ]
+      }
+    },
+    {
+      "name": "top_routes",
+      "displayName": "Top 10 Routes by Revenue",
+      "config": {
+        "source": "SELECT * FROM aviation_catalog.flights.gold_route_summary ORDER BY total_revenue DESC LIMIT 10\n",
+        "measures": [
+          {
+            "name": "total_revenue",
+            "expr": "SUM(total_revenue)"
+          },
+          {
+            "name": "total_flights",
+            "expr": "SUM(total_flights)"
+          },
+          {
+            "name": "total_passengers",
+            "expr": "SUM(total_passengers)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Top 10 routes ranked by ticket revenue",
+        "dimensions": [
+          {
+            "name": "route",
+            "expr": "concat_ws(' → ', origin_city, destination_city)"
+          },
+          {
+            "name": "origin_city",
+            "expr": "origin_city"
+          }
+        ]
+      }
+    },
+    {
+      "name": "route_summary",
+      "displayName": "Route Summary",
+      "config": {
+        "source": "aviation_catalog.flights.gold_route_summary",
+        "measures": [
+          {
+            "name": "total_flights",
+            "expr": "SUM(total_flights)"
+          },
+          {
+            "name": "total_passengers",
+            "expr": "SUM(total_passengers)"
+          },
+          {
+            "name": "total_revenue",
+            "expr": "SUM(total_revenue)"
+          },
+          {
+            "name": "average_delay",
+            "expr": "AVG(average_delay)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Route-level flights, passengers, revenue and average delay from the gold layer",
+        "dimensions": [
+          {
+            "name": "origin_city",
+            "expr": "origin_city"
+          },
+          {
+            "name": "destination_city",
+            "expr": "destination_city"
+          },
+          {
+            "name": "route",
+            "expr": "concat_ws(' → ', origin_city, destination_city)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "monthly_flights",
+      "displayName": "Monthly Flights",
+      "config": {
+        "source": "aviation_catalog.flights.gold_monthly_flights",
+        "measures": [
+          {
+            "name": "total_flights",
+            "expr": "SUM(total_flights)"
+          },
+          {
+            "name": "total_passengers",
+            "expr": "SUM(total_passengers)"
+          },
+          {
+            "name": "total_revenue",
+            "expr": "SUM(total_revenue)"
+          },
+          {
+            "name": "average_delay",
+            "expr": "AVG(average_delay)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Monthly flights, passengers, revenue and average delay from the gold layer",
+        "dimensions": [
+          {
+            "name": "flight_date",
+            "expr": "make_date(flight_year, flight_month, 1)"
+          },
+          {
+            "name": "month_name",
+            "expr": "date_format(make_date(flight_year, flight_month, 1), 'MMM')"
+          }
+        ]
+      }
+    },
+    {
+      "name": "data_quality",
+      "displayName": "Data Quality",
+      "config": {
+        "source": "aviation_catalog.flights.gold_data_quality",
+        "measures": [
+          {
+            "name": "bronze_rows",
+            "expr": "SUM(bronze_rows)"
+          },
+          {
+            "name": "clean_rows",
+            "expr": "SUM(clean_rows)"
+          },
+          {
+            "name": "rejected_rows",
+            "expr": "SUM(rejected_rows)"
+          },
+          {
+            "name": "duplicate_rows",
+            "expr": "SUM(duplicate_rows)"
+          },
+          {
+            "name": "reconciliation_difference",
+            "expr": "SUM(reconciliation_difference)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Bronze-to-gold reconciliation counts and status",
+        "dimensions": [
+          {
+            "name": "reconciliation_status",
+            "expr": "reconciliation_status"
+          }
+        ]
+      }
+    },
+    {
+      "name": "delay_summary",
+      "displayName": "Delay Summary",
+      "config": {
+        "source": "aviation_catalog.flights.gold_delay_summary",
+        "measures": [
+          {
+            "name": "total_flights",
+            "expr": "SUM(total_flights)"
+          },
+          {
+            "name": "average_delay",
+            "expr": "AVG(average_delay)"
+          },
+          {
+            "name": "total_revenue",
+            "expr": "SUM(total_revenue)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Flights and average delay grouped by delay category",
+        "dimensions": [
+          {
+            "name": "delay_category",
+            "expr": "delay_category"
+          }
+        ]
+      }
+    }
+  ],
+  "pages": [
+    {
+      "name": "8b79caaf",
+      "displayName": "Airline Flight Operations – Overview",
+      "layout": [
+        {
+          "widget": {
+            "name": "filter_month",
+            "queries": [
+              {
+                "name": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24c371213ad70a8bc22456e21_month_name",
+                "query": {
+                  "datasetName": "monthly_flights",
+                  "fields": [
+                    {
+                      "name": "month_name",
+                      "expression": "`month_name`"
+                    },
+                    {
+                      "name": "month_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "scale": {
+                "sort": {
+                  "by": "custom-order",
+                  "orderedValues": [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec"
+                  ]
+                },
+                "type": "categorical"
+              },
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Month"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "month_name",
+                    "queryName": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24c371213ad70a8bc22456e21_month_name"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_airline",
+            "queries": [
+              {
+                "name": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24b0219b58f3fdbc587fdd241_airline",
+                "query": {
+                  "datasetName": "airline_summary",
+                  "fields": [
+                    {
+                      "name": "airline",
+                      "expression": "`airline`"
+                    },
+                    {
+                      "name": "airline_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "scale": {
+                "sort": {
+                  "by": "natural-order"
+                },
+                "type": "categorical"
+              },
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Airline"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "airline",
+                    "queryName": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24b0219b58f3fdbc587fdd241_airline"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_origin_city",
+            "queries": [
+              {
+                "name": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24b9316f78941098715085756_origin_city",
+                "query": {
+                  "datasetName": "route_summary",
+                  "fields": [
+                    {
+                      "name": "origin_city",
+                      "expression": "`origin_city`"
+                    },
+                    {
+                      "name": "origin_city_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24b4b18c9bfe12db0b78dd80d_origin_city",
+                "query": {
+                  "datasetName": "top_routes",
+                  "fields": [
+                    {
+                      "name": "origin_city",
+                      "expression": "`origin_city`"
+                    },
+                    {
+                      "name": "origin_city_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "scale": {
+                "sort": {
+                  "by": "natural-order"
+                },
+                "type": "categorical"
+              },
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Origin City",
+                  "fields": []
+                }
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "origin_city",
+                    "queryName": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24b9316f78941098715085756_origin_city"
+                  },
+                  {
+                    "fieldName": "origin_city",
+                    "queryName": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24b4b18c9bfe12db0b78dd80d_origin_city"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_total_flights",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "monthly_flights",
+                  "fields": [
+                    {
+                      "name": "measure(total_flights)",
+                      "expression": "MEASURE(`total_flights`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Flights"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(total_flights)",
+                  "format": {
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_total_passengers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "monthly_flights",
+                  "fields": [
+                    {
+                      "name": "measure(total_passengers)",
+                      "expression": "MEASURE(`total_passengers`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Passengers"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(total_passengers)",
+                  "format": {
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_ticket_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "monthly_flights",
+                  "fields": [
+                    {
+                      "name": "measure(total_revenue)",
+                      "expression": "MEASURE(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Ticket Revenue"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(total_revenue)",
+                  "format": {
+                    "abbreviation": "compact",
+                    "currencyCode": "INR",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-currency"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_delayed_flights",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "airline_summary",
+                  "fields": [
+                    {
+                      "name": "measure(delayed_flights)",
+                      "expression": "MEASURE(`delayed_flights`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Delayed Flights (> 15 min)"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(delayed_flights)",
+                  "format": {
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_bronze_rows",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(bronze_rows)",
+                      "expression": "MEASURE(`bronze_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Bronze Rows"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(bronze_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_clean_flights",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(clean_rows)",
+                      "expression": "MEASURE(`clean_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Clean Flights"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(clean_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_rejected_records",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(rejected_rows)",
+                      "expression": "MEASURE(`rejected_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Rejected Records"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(rejected_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_duplicate_records",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(duplicate_rows)",
+                      "expression": "MEASURE(`duplicate_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Duplicates",
+                  "fields": []
+                }
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(duplicate_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_revenue_by_month",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "monthly_flights",
+                  "fields": [
+                    {
+                      "name": "flight_date",
+                      "expression": "`flight_date`"
+                    },
+                    {
+                      "name": "measure(total_revenue)",
+                      "expression": "MEASURE(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Ticket Revenue by Month",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#1B4F8A"
+                ],
+                "lineShape": "smooth",
+                "marker": {
+                  "shape": "circle"
+                }
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "flight_date",
+                  "format": {
+                    "date": "locale-short-month",
+                    "type": "date"
+                  },
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(total_revenue)",
+                  "format": {
+                    "abbreviation": "compact",
+                    "currencyCode": "INR",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-currency"
+                  },
+                  "displayName": "Ticket Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 8,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_on_time_by_airline",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "airline_summary",
+                  "fields": [
+                    {
+                      "name": "measure(on_time_percentage)",
+                      "expression": "MEASURE(`on_time_percentage`)"
+                    },
+                    {
+                      "name": "airline",
+                      "expression": "`airline`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "On-Time Percentage by Airline",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#2D7DD2"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(on_time_percentage)",
+                  "format": {
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-plain"
+                  },
+                  "formatTemplate": "{{ @formatted }}%",
+                  "displayName": "On-Time %",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "airline",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 4,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_flights_by_delay_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "delay_summary",
+                  "fields": [
+                    {
+                      "name": "delay_category",
+                      "expression": "`delay_category`"
+                    },
+                    {
+                      "name": "measure(total_flights)",
+                      "expression": "MEASURE(`total_flights`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Flights by Delay Category"
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#4A90D9"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "delay_category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(total_flights)",
+                  "displayName": "Flights",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_dq_issues",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality_issues",
+                  "fields": [
+                    {
+                      "name": "measure(issue_count)",
+                      "expression": "MEASURE(`issue_count`)"
+                    },
+                    {
+                      "name": "issue_type",
+                      "expression": "`issue_type`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Issues Found in Bronze Rows"
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#C85070"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(issue_count)",
+                  "displayName": "Records",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "issue_type",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 8,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_delay_category",
+            "queries": [
+              {
+                "name": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24d791366aad856e7ef85692e_delay_category",
+                "query": {
+                  "datasetName": "delay_summary",
+                  "fields": [
+                    {
+                      "name": "delay_category",
+                      "expression": "`delay_category`"
+                    },
+                    {
+                      "name": "delay_category_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "scale": {
+                "sort": {
+                  "by": "natural-order"
+                },
+                "type": "categorical"
+              },
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Delay Category"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "delay_category",
+                    "queryName": "dashboards/01f1dec1c74c1ae39de7e135ab05e310/datasets/01f1dec24d791366aad856e7ef85692e_delay_category"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "routes_and_delays",
+      "displayName": "Airlines, Routes and Delays",
+      "layout": [
+        {
+          "widget": {
+            "name": "table_airline_performance",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "airline_summary",
+                  "fields": [
+                    {
+                      "name": "airline",
+                      "expression": "`airline`"
+                    },
+                    {
+                      "name": "measure(total_flights)",
+                      "expression": "MEASURE(`total_flights`)"
+                    },
+                    {
+                      "name": "measure(total_passengers)",
+                      "expression": "MEASURE(`total_passengers`)"
+                    },
+                    {
+                      "name": "measure(total_revenue)",
+                      "expression": "MEASURE(`total_revenue`)"
+                    },
+                    {
+                      "name": "measure(average_delay)",
+                      "expression": "MEASURE(`average_delay`)"
+                    },
+                    {
+                      "name": "measure(on_time_percentage)",
+                      "expression": "MEASURE(`on_time_percentage`)"
+                    },
+                    {
+                      "name": "measure(delayed_flights)",
+                      "expression": "MEASURE(`delayed_flights`)"
+                    },
+                    {
+                      "name": "measure(load_factor_percentage)",
+                      "expression": "MEASURE(`load_factor_percentage`)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "MEASURE(`total_flights`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Airline-wise Flight Performance"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "airline",
+                    "displayName": "Airline"
+                  },
+                  {
+                    "fieldName": "measure(total_flights)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Flights"
+                  },
+                  {
+                    "fieldName": "measure(total_passengers)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Passengers"
+                  },
+                  {
+                    "fieldName": "measure(total_revenue)",
+                    "format": {
+                      "abbreviation": "none",
+                      "currencyCode": "INR",
+                      "type": "number-currency"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Ticket Revenue"
+                  },
+                  {
+                    "fieldName": "measure(average_delay)",
+                    "format": {
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "places": 1,
+                        "type": "max"
+                      },
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Avg Delay",
+                    "formatTemplate": "{{ @formatted }} min"
+                  },
+                  {
+                    "fieldName": "measure(on_time_percentage)",
+                    "format": {
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "places": 1,
+                        "type": "max"
+                      },
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "On-Time %",
+                    "formatTemplate": "{{ @formatted }}%"
+                  },
+                  {
+                    "fieldName": "measure(delayed_flights)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Delayed (>15 min)"
+                  },
+                  {
+                    "fieldName": "measure(load_factor_percentage)",
+                    "format": {
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "places": 1,
+                        "type": "max"
+                      },
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Load Factor",
+                    "formatTemplate": "{{ @formatted }}%"
+                  }
+                ],
+                "rowOrder": [
+                  {
+                    "by": "column-reversed",
+                    "field": {
+                      "index": 1
+                    }
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_top_routes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "top_routes",
+                  "fields": [
+                    {
+                      "name": "measure(total_revenue)",
+                      "expression": "MEASURE(`total_revenue`)"
+                    },
+                    {
+                      "name": "route",
+                      "expression": "`route`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Routes by Revenue"
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#1B4F8A"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(total_revenue)",
+                  "format": {
+                    "abbreviation": "compact",
+                    "currencyCode": "INR",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-currency"
+                  },
+                  "displayName": "Ticket Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "route",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_delay_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "delay_summary",
+                  "fields": [
+                    {
+                      "name": "delay_category",
+                      "expression": "`delay_category`"
+                    },
+                    {
+                      "name": "measure(total_flights)",
+                      "expression": "MEASURE(`total_flights`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Flights by Delay Category"
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#4A90D9"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "delay_category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(total_flights)",
+                  "displayName": "Flights",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_avg_delay_by_airline",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "airline_summary",
+                  "fields": [
+                    {
+                      "name": "measure(average_delay)",
+                      "expression": "MEASURE(`average_delay`)"
+                    },
+                    {
+                      "name": "airline",
+                      "expression": "`airline`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Average Delay by Airline"
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#2D7DD2"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(average_delay)",
+                  "format": {
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-plain"
+                  },
+                  "formatTemplate": "{{ @formatted }} min",
+                  "displayName": "Avg Delay",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "airline",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_avg_delay_by_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "delay_summary",
+                  "fields": [
+                    {
+                      "name": "delay_category",
+                      "expression": "`delay_category`"
+                    },
+                    {
+                      "name": "measure(average_delay)",
+                      "expression": "MEASURE(`average_delay`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Average Delay by Delay Category"
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#5B9BD5"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "delay_category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(average_delay)",
+                  "format": {
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-plain"
+                  },
+                  "formatTemplate": "{{ @formatted }} min",
+                  "displayName": "Avg Delay",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 11,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "data_quality",
+      "displayName": "Data Quality",
+      "layout": [
+        {
+          "widget": {
+            "name": "kpi_bronze_rows",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(bronze_rows)",
+                      "expression": "MEASURE(`bronze_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Bronze Rows"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(bronze_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_clean_flights",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(clean_rows)",
+                      "expression": "MEASURE(`clean_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Clean Flights"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(clean_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_rejected_records",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(rejected_rows)",
+                      "expression": "MEASURE(`rejected_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Rejected Records"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(rejected_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_duplicate_records",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(duplicate_rows)",
+                      "expression": "MEASURE(`duplicate_rows`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Duplicate Records"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(duplicate_rows)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_reconciliation_difference",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "measure(reconciliation_difference)",
+                      "expression": "MEASURE(`reconciliation_difference`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Reconciliation Difference"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#E8EEF7",
+                  "light": "#0B2E4F"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(reconciliation_difference)",
+                  "format": {
+                    "abbreviation": "none",
+                    "type": "number-plain"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "table_reconciliation_status",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality",
+                  "fields": [
+                    {
+                      "name": "reconciliation_status",
+                      "expression": "`reconciliation_status`"
+                    },
+                    {
+                      "name": "measure(bronze_rows)",
+                      "expression": "MEASURE(`bronze_rows`)"
+                    },
+                    {
+                      "name": "measure(clean_rows)",
+                      "expression": "MEASURE(`clean_rows`)"
+                    },
+                    {
+                      "name": "measure(rejected_rows)",
+                      "expression": "MEASURE(`rejected_rows`)"
+                    },
+                    {
+                      "name": "measure(duplicate_rows)",
+                      "expression": "MEASURE(`duplicate_rows`)"
+                    },
+                    {
+                      "name": "measure(reconciliation_difference)",
+                      "expression": "MEASURE(`reconciliation_difference`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Reconciliation Status"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "reconciliation_status",
+                    "displayName": "Reconciliation Status"
+                  },
+                  {
+                    "fieldName": "measure(bronze_rows)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Bronze Rows"
+                  },
+                  {
+                    "fieldName": "measure(clean_rows)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Clean Flights"
+                  },
+                  {
+                    "fieldName": "measure(rejected_rows)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Rejected Records"
+                  },
+                  {
+                    "fieldName": "measure(duplicate_rows)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Duplicates"
+                  },
+                  {
+                    "fieldName": "measure(reconciliation_difference)",
+                    "format": {
+                      "abbreviation": "none",
+                      "type": "number-plain"
+                    },
+                    "headerAlignment": "right",
+                    "displayName": "Difference"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 9,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_dq_issues",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "data_quality_issues",
+                  "fields": [
+                    {
+                      "name": "measure(issue_count)",
+                      "expression": "MEASURE(`issue_count`)"
+                    },
+                    {
+                      "name": "issue_type",
+                      "expression": "`issue_type`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Data Quality Issues Found in Bronze Rows"
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  "#C85070"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(issue_count)",
+                  "displayName": "Records",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "issue_type",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 12,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#E8EEF7",
+        "dark": "#0E1A2B"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#16263B"
+      },
+      "widgetBorderColor": {
+        "light": "#FFFFFF",
+        "dark": "#16263B"
+      },
+      "selectionColor": {
+        "light": "#2D7DD2",
+        "dark": "#2D7DD2"
+      },
+      "visualizationColors": [
+        "#1B4F8A",
+        "#2D7DD2",
+        "#8FC1E3",
+        "#5B9BD5",
+        "#0B2E4F",
+        "#63A0E0",
+        "#C85070"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "fontSettings": {
+        "base": {
+          "fontFamily": "Inter",
+          "fontColor": {
+            "light": "#0B2E4F",
+            "dark": "#E8EEF7"
+          }
+        }
+      },
+      "gridLineColor": {
+        "light": "#D5E2F0",
+        "dark": "#24364D"
+      }
+    },
+    "applyModeEnabled": false
+  }
+}
